@@ -2,9 +2,10 @@
   "name": "api-social-news-app",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
-    "start": "ts-node src/index.ts"
+    "watch": "tsc -w",
+    "dev": "nodemon -r dotenv/config ./dist/index.js",
+    "start": "node -r dotenv/config ./dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -19,7 +20,23 @@
   "homepage": "https://github.com/IamManchanda/api-social-news-app#readme",
   "devDependencies": {
     "@types/node": "^14.11.8",
+    "dotenv": "^8.2.0",
+    "nodemon": "^2.0.5",
     "ts-node": "^9.0.0",
     "typescript": "^4.0.3"
+  },
+  "dependencies": {
+    "@mikro-orm/cli": "^4.1.1",
+    "@mikro-orm/core": "^4.1.0",
+    "@mikro-orm/migrations": "^4.1.1",
+    "@mikro-orm/postgresql": "^4.1.1",
+    "pg": "^8.4.1"
+  },
+  "mikro-orm": {
+    "useTsNode": true,
+    "configPaths": [
+      "./src/mikro-orm.config.ts",
+      "./dist/mikro-orm.config.js"
+    ]
   }
 }
