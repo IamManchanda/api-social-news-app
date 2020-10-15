@@ -10,7 +10,6 @@ import {
 } from "type-graphql";
 import { User } from "../entities/user";
 import argon2 from "argon2";
-import { Post } from "src/entities/post";
 
 @InputType()
 class UsernamePasswordOptions {
