@@ -1,9 +1,11 @@
+import "reflect-metadata";
 import { MikroORM } from "@mikro-orm/core";
 import mikroOrmConfig from "./mikro-orm.config";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
+import { PostResolver } from "./resolvers/post";
 
 const main = async () => {
   /* Database Server Connect */
@@ -12,19 +14,18 @@ const main = async () => {
 
   /* API Server */
   const app = express();
+  const host = "http://localhost";
   const port = 4000;
   const server = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolver],
+      resolvers: [HelloResolver, PostResolver],
       validate: false,
     }),
+    context: () => ({ em: orm.em }),
   });
-  server.applyMiddleware({ app });
-  app.get("/", (_req, res) => {
-    res.send("Hello World!");
-  });
+  server.applyMiddleware({ app, path: "/" });
   app.listen(port, () => {
-    console.log(`Server started on port ${port}`);
+    console.log(`Server started on port ${host}:${port}${server.graphqlPath}`);
   });
 };
 
