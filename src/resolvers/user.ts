@@ -10,6 +10,7 @@ import {
 } from "type-graphql";
 import { User } from "../entities/user";
 import argon2 from "argon2";
+import { Post } from "src/entities/post";
 
 @InputType()
 class UsernamePasswordOptions {
@@ -40,17 +41,55 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
-  @Mutation(() => User)
+  @Mutation(() => UserResponse)
   async register(
     @Arg("options", () => UsernamePasswordOptions)
     options: UsernamePasswordOptions,
     @Ctx() { em }: MyContext,
-  ) {
+  ): Promise<UserResponse> {
     const { username, password: plainPassword } = options;
+
+    if (username.length <= 2) {
+      return {
+        errors: [
+          {
+            field: "username",
+            message: "username length must be greater than 2",
+          },
+        ],
+      };
+    }
+
+    if (plainPassword.length <= 3) {
+      return {
+        errors: [
+          {
+            field: "password",
+            message: "password length must be greater than 3",
+          },
+        ],
+      };
+    }
+
     const password = await argon2.hash(plainPassword);
     const user = em.create(User, { username, password });
-    await em.persistAndFlush(user);
-    return user;
+
+    try {
+      await em.persistAndFlush(user);
+    } catch (error) {
+      if (error.code === "23505") {
+        return {
+          errors: [
+            {
+              field: "username",
+              message: "username already exists",
+            },
+          ],
+        };
+      }
+    }
+
+    return { user };
   }
 
   @Mutation(() => UserResponse)
@@ -71,6 +110,7 @@ export class UserResolver {
         ],
       };
     }
+
     const valid = await argon2.verify(user.password, plainPassword);
     if (!valid) {
       return {
@@ -82,6 +122,7 @@ export class UserResolver {
         ],
       };
     }
+
     return { user };
   }
 }
