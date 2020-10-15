@@ -1,6 +1,7 @@
 import { MyContext } from "src/types";
 import {
   InputType,
+  Query,
   Mutation,
   Resolver,
   Field,
@@ -40,11 +41,18 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Query(() => User, { nullable: true })
+  async me(@Ctx() { em, req }: MyContext) {
+    if (!req.session.userId) return null;
+    const user = await em.findOne(User, { id: req.session.userId });
+    return user;
+  }
+
   @Mutation(() => UserResponse)
   async register(
     @Arg("options", () => UsernamePasswordOptions)
     options: UsernamePasswordOptions,
-    @Ctx() { em }: MyContext,
+    @Ctx() { em, req }: MyContext,
   ): Promise<UserResponse> {
     const { username, password: plainPassword } = options;
 
@@ -88,6 +96,7 @@ export class UserResolver {
       }
     }
 
+    req.session.userId = user.id;
     return { user };
   }
 
@@ -95,7 +104,7 @@ export class UserResolver {
   async login(
     @Arg("options", () => UsernamePasswordOptions)
     options: UsernamePasswordOptions,
-    @Ctx() { em }: MyContext,
+    @Ctx() { em, req }: MyContext,
   ): Promise<UserResponse> {
     const { username, password: plainPassword } = options;
     const user = await em.findOne(User, { username });
@@ -122,6 +131,7 @@ export class UserResolver {
       };
     }
 
+    req.session.userId = user.id;
     return { user };
   }
 }
