@@ -11,6 +11,7 @@ import redis from "redis";
 import session from "express-session";
 import connectRedis from "connect-redis";
 import { __prod__ } from "./constants";
+import cors from "cors";
 
 const main = async () => {
   /* Database Server Connect */
@@ -23,6 +24,12 @@ const main = async () => {
   const port = 4000;
   const RedisStore = connectRedis(session);
   const redisClient = redis.createClient();
+  app.use(
+    cors({
+      origin: "http://localhost:3000",
+      credentials: true,
+    }),
+  );
   app.use(
     session({
       name: "qid",
@@ -48,7 +55,7 @@ const main = async () => {
     }),
     context: ({ req, res }) => ({ em: orm.em, req, res }),
   });
-  server.applyMiddleware({ app, path: "/" });
+  server.applyMiddleware({ app, path: "/", cors: false });
   app.listen(port, () => {
     console.log(`Server started on port ${host}:${port}${server.graphqlPath}`);
   });
