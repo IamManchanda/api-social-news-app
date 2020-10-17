@@ -4,9 +4,9 @@ import { User } from "../entities/user";
 import argon2 from "argon2";
 import { EntityManager } from "@mikro-orm/postgresql";
 import { COOKIE_NAME, FORGOT_PASSWORD_PREFIX } from "../constants";
-import { RegisterOptions } from "../entities/lib/register-options";
-import { LoginOptions } from "../entities/lib/login-options";
-import { UserResponse } from "../entities/lib/user-response";
+import { RegisterOptions } from "../lib/register-options";
+import { LoginOptions } from "../lib/login-options";
+import { UserResponse } from "../lib/user-response";
 import { validateRegisteredUser } from "../utils/validate-registered-user";
 import { sendEmail } from "../utils/send-email";
 import { v4 as uuidv4 } from "uuid";
@@ -148,5 +148,56 @@ export class UserResolver {
         `,
     });
     return true;
+  }
+
+  @Mutation(() => UserResponse)
+  async resetPassword(
+    @Arg("token") token: string,
+    @Arg("newPassword") newPassword: string,
+    @Ctx() { redis, em, req }: MyContext,
+  ): Promise<UserResponse> {
+    if (newPassword.length <= 3) {
+      return {
+        errors: [
+          {
+            field: "newPassword",
+            message: "new password length must be greater than 3",
+          },
+        ],
+      };
+    }
+
+    const key = `${FORGOT_PASSWORD_PREFIX}${token}`;
+
+    const userId = await redis.get(key);
+    if (!userId) {
+      return {
+        errors: [
+          {
+            field: "token",
+            message: "the reset password token has expired",
+          },
+        ],
+      };
+    }
+
+    const user = await em.findOne(User, { id: parseInt(userId) });
+    if (!user) {
+      return {
+        errors: [
+          {
+            field: "token",
+            message: "user no longer exists",
+          },
+        ],
+      };
+    }
+
+    user.password = await argon2.hash(newPassword);
+    await em.persistAndFlush(user);
+
+    await redis.del(key);
+    req.session.userId = user.id;
+    return { user };
   }
 }
