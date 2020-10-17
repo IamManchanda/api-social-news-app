@@ -1,7 +1,7 @@
 {
   "name": "api-social-news-app",
   "version": "1.0.0",
-  "description": "",
+  "description": "API: Social News App",
   "scripts": {
     "watch": "tsc -w",
     "dev": "nodemon -r dotenv/config ./dist/index.js",
@@ -14,7 +14,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/IamManchanda/api-social-news-app/issues"
   },
