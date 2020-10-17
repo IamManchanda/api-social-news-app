@@ -1,45 +1,13 @@
 import { MyContext } from "src/types";
-import {
-  InputType,
-  Query,
-  Mutation,
-  Resolver,
-  Field,
-  Arg,
-  Ctx,
-  ObjectType,
-} from "type-graphql";
+import { Query, Mutation, Resolver, Arg, Ctx } from "type-graphql";
 import { User } from "../entities/user";
 import argon2 from "argon2";
 import { EntityManager } from "@mikro-orm/postgresql";
 import { COOKIE_NAME } from "../constants";
-
-@InputType()
-class UsernamePasswordOptions {
-  @Field(() => String)
-  username: string;
-
-  @Field(() => String)
-  password: string;
-}
-
-@ObjectType()
-class FieldError {
-  @Field(() => String)
-  field: string;
-
-  @Field(() => String)
-  message: string;
-}
-
-@ObjectType()
-class UserResponse {
-  @Field(() => [FieldError], { nullable: true })
-  errors?: FieldError[];
-
-  @Field(() => User, { nullable: true })
-  user?: User;
-}
+import { RegisterOptions } from "../entities/lib/register-options";
+import { LoginOptions } from "../entities/lib/login-options";
+import { UserResponse } from "../entities/lib/user-response";
+import { validateRegisteredUser } from "../utils/validate-registered-user";
 
 @Resolver()
 export class UserResolver {
@@ -54,34 +22,14 @@ export class UserResolver {
 
   @Mutation(() => UserResponse)
   async register(
-    @Arg("options", () => UsernamePasswordOptions)
-    options: UsernamePasswordOptions,
+    @Arg("options", () => RegisterOptions)
+    options: RegisterOptions,
     @Ctx() { em, req }: MyContext,
   ): Promise<UserResponse> {
-    const { username, password: plainPassword } = options;
+    const errors = validateRegisteredUser(options);
+    if (errors) return { errors };
 
-    if (username.length <= 2) {
-      return {
-        errors: [
-          {
-            field: "username",
-            message: "username length must be greater than 2",
-          },
-        ],
-      };
-    }
-
-    if (plainPassword.length <= 3) {
-      return {
-        errors: [
-          {
-            field: "password",
-            message: "password length must be greater than 3",
-          },
-        ],
-      };
-    }
-
+    const { email, username, password: plainPassword } = options;
     const password = await argon2.hash(plainPassword);
 
     let user;
@@ -90,6 +38,7 @@ export class UserResolver {
         .createQueryBuilder(User)
         .getKnexQuery()
         .insert({
+          email,
           username,
           password,
           created_at: new Date(),
@@ -116,18 +65,24 @@ export class UserResolver {
 
   @Mutation(() => UserResponse)
   async login(
-    @Arg("options", () => UsernamePasswordOptions)
-    options: UsernamePasswordOptions,
+    @Arg("options", () => LoginOptions)
+    options: LoginOptions,
     @Ctx() { em, req }: MyContext,
   ): Promise<UserResponse> {
-    const { username, password: plainPassword } = options;
-    const user = await em.findOne(User, { username });
+    const { usernameOrEmail, password: plainPassword } = options;
+    const user = await em.findOne(
+      User,
+      usernameOrEmail.includes("@")
+        ? { email: usernameOrEmail }
+        : { username: usernameOrEmail },
+    );
+
     if (!user) {
       return {
         errors: [
           {
-            field: "username",
-            message: "username doesn't exist",
+            field: "usernameOrEmail",
+            message: "username or email doesn't exist",
           },
         ],
       };
@@ -162,5 +117,12 @@ export class UserResolver {
         }
       }),
     );
+  }
+
+  @Mutation(() => Boolean)
+  async forgotPassword(@Arg("email") email: string, @Ctx() { em }: MyContext) {
+    const user = await em.findOne(User, { email });
+    console.log({ user });
+    return true;
   }
 }
