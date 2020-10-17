@@ -3,11 +3,13 @@ import { Query, Mutation, Resolver, Arg, Ctx } from "type-graphql";
 import { User } from "../entities/user";
 import argon2 from "argon2";
 import { EntityManager } from "@mikro-orm/postgresql";
-import { COOKIE_NAME } from "../constants";
+import { COOKIE_NAME, FORGOT_PASSWORD_PREFIX } from "../constants";
 import { RegisterOptions } from "../entities/lib/register-options";
 import { LoginOptions } from "../entities/lib/login-options";
 import { UserResponse } from "../entities/lib/user-response";
 import { validateRegisteredUser } from "../utils/validate-registered-user";
+import { sendEmail } from "../utils/send-email";
+import { v4 as uuidv4 } from "uuid";
 
 @Resolver()
 export class UserResolver {
@@ -120,9 +122,31 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean)
-  async forgotPassword(@Arg("email") email: string, @Ctx() { em }: MyContext) {
+  async forgotPassword(
+    @Arg("email") email: string,
+    @Ctx() { em, redis }: MyContext,
+  ) {
     const user = await em.findOne(User, { email });
-    console.log({ user });
+
+    // for security reasons, don't tell user anything and just return true
+    if (!user) return true;
+
+    const token = uuidv4();
+    await redis.set(
+      `${FORGOT_PASSWORD_PREFIX}${token}`,
+      user.id,
+      "ex",
+      1000 * 60 * 60 * 24 * 3, // 3 Days
+    );
+    await sendEmail({
+      to: email,
+      subject: "Reset Password!",
+      html: `
+          <p>
+            Please visit this link to <a href="${process.env.RESET_PASSWORD_LINK}/${token}">Reset Password</a>
+          </p>
+        `,
+    });
     return true;
   }
 }
