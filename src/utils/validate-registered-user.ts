@@ -7,7 +7,7 @@ export const validateRegisteredUser = (options: RegisterOptions) => {
     return [
       {
         field: "email",
-        message: "invalid email",
+        message: "Invalid Email",
       },
     ];
   }
@@ -16,7 +16,7 @@ export const validateRegisteredUser = (options: RegisterOptions) => {
     return [
       {
         field: "username",
-        message: "username length must be greater than 2",
+        message: "Username length must be greater than 2",
       },
     ];
   }
@@ -25,7 +25,7 @@ export const validateRegisteredUser = (options: RegisterOptions) => {
     return [
       {
         field: "username",
-        message: "username cannot include an @ sign",
+        message: "Username cannot include an @ sign",
       },
     ];
   }
@@ -34,7 +34,7 @@ export const validateRegisteredUser = (options: RegisterOptions) => {
     return [
       {
         field: "password",
-        message: "password length must be greater than 3",
+        message: "Password length must be greater than 3",
       },
     ];
   }

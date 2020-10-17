@@ -54,7 +54,7 @@ export class UserResolver {
           errors: [
             {
               field: "username",
-              message: "username already exists",
+              message: "Username already exists",
             },
           ],
         };
@@ -84,7 +84,7 @@ export class UserResolver {
         errors: [
           {
             field: "usernameOrEmail",
-            message: "username or email doesn't exist",
+            message: "Username or Email doesn't exist",
           },
         ],
       };
@@ -96,7 +96,7 @@ export class UserResolver {
         errors: [
           {
             field: "password",
-            message: "incorrect password",
+            message: "Incorrect Password",
           },
         ],
       };
@@ -161,7 +161,7 @@ export class UserResolver {
         errors: [
           {
             field: "newPassword",
-            message: "new password length must be greater than 3",
+            message: "New Password length must be greater than 3",
           },
         ],
       };
@@ -175,7 +175,7 @@ export class UserResolver {
         errors: [
           {
             field: "token",
-            message: "the reset password token has expired",
+            message: "The Reset Password token has expired",
           },
         ],
       };
@@ -187,7 +187,7 @@ export class UserResolver {
         errors: [
           {
             field: "token",
-            message: "user no longer exists",
+            message: "User no longer exists",
           },
         ],
       };
