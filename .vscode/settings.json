@@ -44,6 +44,6 @@
     "**/.fusebox/": true,
     "**/.dynamodb/": true,
     "**/.tern-port": true,
-    "**/migrations/": true
+    "**/migrations/": false
   }
 }
