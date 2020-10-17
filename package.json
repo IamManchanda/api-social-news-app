@@ -6,7 +6,7 @@
     "watch": "tsc -w",
     "dev": "nodemon -r dotenv/config ./dist/index.js",
     "start": "node -r dotenv/config ./dist/index.js",
-    "migration:create": "rm -rf src/migrations && rm -rf dist/migrations && npx mikro-orm migration:create"
+    "migrate": "rm -rf src/migrations && rm -rf dist/migrations && npx mikro-orm migration:create"
   },
   "repository": {
     "type": "git",
