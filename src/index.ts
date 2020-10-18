@@ -15,7 +15,7 @@ import { Post } from "./entities/post";
 import { User } from "./entities/user";
 
 const main = async () => {
-  /* Database Server Connect with ORM */
+  /* Database Server Connection with ORM */
   await createConnection({
     type: "postgres",
     database: "db-social-news-app",
