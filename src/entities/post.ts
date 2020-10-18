@@ -4,9 +4,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { User } from "./user";
 
 @ObjectType()
 @Entity()
@@ -16,14 +18,29 @@ export class Post extends BaseEntity {
   id!: number;
 
   @Field(() => String)
+  @Column()
+  title!: string;
+
+  @Field(() => String)
+  @Column()
+  text!: string;
+
+  @Field(() => Int)
+  @Column({ type: "int", default: 0 })
+  points!: number;
+
+  @Field(() => Int)
+  @Column()
+  creatorId: number;
+
+  @ManyToOne(() => User, (user) => user.posts)
+  creator: User;
+
+  @Field(() => String)
   @CreateDateColumn()
   createdAt: Date;
 
   @Field(() => String)
   @UpdateDateColumn()
   updatedAt: Date;
-
-  @Field(() => String)
-  @Column()
-  title!: string;
 }
