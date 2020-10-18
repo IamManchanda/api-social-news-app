@@ -1,4 +1,4 @@
-import { RegisterOptions } from "../lib/register-options";
+import { RegisterOptions } from "../dto/register-options";
 
 export const validateRegisteredUser = (options: RegisterOptions) => {
   const { email, username, password: plainPassword } = options;
