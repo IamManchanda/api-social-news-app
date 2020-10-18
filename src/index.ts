@@ -1,6 +1,4 @@
 import "reflect-metadata";
-import { MikroORM } from "@mikro-orm/core";
-import mikroOrmConfig from "./mikro-orm.config";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
@@ -12,11 +10,21 @@ import session from "express-session";
 import connectRedis from "connect-redis";
 import { __prod__, COOKIE_NAME } from "./constants";
 import cors from "cors";
+import { createConnection } from "typeorm";
+import { Post } from "./entities/post";
+import { User } from "./entities/user";
 
 const main = async () => {
-  /* Database Server Connect */
-  const orm = await MikroORM.init(mikroOrmConfig);
-  await orm.getMigrator().up();
+  /* Database Server Connect with ORM */
+  await createConnection({
+    type: "postgres",
+    database: "db-social-news-app",
+    username: process.env.DATABASE_USERNAME || "postgres",
+    password: process.env.DATABASE_PASSWORD || "postgres",
+    logging: true,
+    synchronize: true,
+    entities: [Post, User],
+  });
 
   /* API & Caching Server */
   const app = express();
@@ -53,7 +61,7 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }) => ({ em: orm.em, req, res, redis }),
+    context: ({ req, res }) => ({ req, res, redis }),
   });
   server.applyMiddleware({ app, path: "/", cors: false });
   app.listen(port, () => {
