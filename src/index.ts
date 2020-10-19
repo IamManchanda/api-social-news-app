@@ -29,6 +29,8 @@ const main = async () => {
   });
   await conn.runMigrations();
 
+  // await Post.delete({});
+
   /* API & Caching Server */
   const app = express();
   const host = "http://localhost";
