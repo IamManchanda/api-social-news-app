@@ -1,10 +1,12 @@
 import {
   Arg,
   Ctx,
+  FieldResolver,
   Int,
   Mutation,
   Query,
   Resolver,
+  Root,
   UseMiddleware,
 } from "type-graphql";
 import { Post } from "../entities/post";
@@ -13,8 +15,18 @@ import { MyContext } from "../types";
 import { isAuth } from "../middlewares/is-auth";
 import { getConnection } from "typeorm";
 
-@Resolver()
+@Resolver(Post)
 export class PostResolver {
+  @FieldResolver(() => String)
+  textSnippet(
+    @Arg("snippetLimit", () => Int) snippetLimit: number,
+    @Root() root: Post,
+  ) {
+    const textLength = root.text.length;
+    let textSnippet = root.text.slice(0, snippetLimit);
+    return `${textSnippet}${textLength > snippetLimit ? "..." : ""}`;
+  }
+
   @Query(() => [Post])
   posts(
     @Arg("limit", () => Int) limit: number,

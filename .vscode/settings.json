@@ -43,6 +43,7 @@
     "**/.serverless/": true,
     "**/.fusebox/": true,
     "**/.dynamodb/": true,
-    "**/.tern-port": true
+    "**/.tern-port": true,
+    "**/migrations": false
   }
 }

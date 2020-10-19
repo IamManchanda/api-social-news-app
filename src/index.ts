@@ -13,18 +13,21 @@ import cors from "cors";
 import { createConnection } from "typeorm";
 import { Post } from "./entities/post";
 import { User } from "./entities/user";
+import path from "path";
 
 const main = async () => {
   /* Database Server Connection with ORM */
-  await createConnection({
+  const conn = await createConnection({
     type: "postgres",
     database: "db-social-news-app",
     username: process.env.DATABASE_USERNAME || "postgres",
     password: process.env.DATABASE_PASSWORD || "postgres",
     logging: true,
     synchronize: true,
+    migrations: [path.join(__dirname, "./migrations/*")],
     entities: [Post, User],
   });
+  await conn.runMigrations();
 
   /* API & Caching Server */
   const app = express();
