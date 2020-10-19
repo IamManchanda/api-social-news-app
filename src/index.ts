@@ -14,6 +14,7 @@ import { createConnection } from "typeorm";
 import { Post } from "./entities/post";
 import { User } from "./entities/user";
 import path from "path";
+import { Upvote } from "./entities/upvote";
 
 const main = async () => {
   /* Database Server Connection with ORM */
@@ -25,7 +26,7 @@ const main = async () => {
     logging: true,
     synchronize: true,
     migrations: [path.join(__dirname, "./migrations/*")],
-    entities: [Post, User],
+    entities: [Post, User, Upvote],
   });
 
   // await conn.runMigrations();

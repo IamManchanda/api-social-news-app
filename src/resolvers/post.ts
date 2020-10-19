@@ -15,6 +15,7 @@ import { MyContext } from "../types";
 import { isAuth } from "../middlewares/is-auth";
 import { getConnection } from "typeorm";
 import { PaginatedPostsResponse } from "../lib/paginated-posts-response";
+import { Upvote } from "../entities/upvote";
 
 @Resolver(Post)
 export class PostResolver {
@@ -101,6 +102,31 @@ export class PostResolver {
   @Mutation(() => Boolean)
   async deletePost(@Arg("id", () => Int) id: number): Promise<boolean> {
     await Post.delete(id);
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async vote(
+    @Arg("postId", () => Int) postId: number,
+    @Arg("value", () => Int) value: number,
+    @Ctx() { req }: MyContext,
+  ): Promise<boolean> {
+    const isUpvote = value !== -1;
+    const realValue = isUpvote ? 1 : -1;
+    const { userId } = req.session;
+    await getConnection().query(`
+      START TRANSACTION;
+
+      INSERT INTO upvote ("userId", "postId", value)
+      VALUES (${userId},${postId},${value});
+      
+      UPDATE post
+      SET points = points + ${realValue}
+      WHERE id = ${postId};
+      
+      COMMIT;
+    `);
     return true;
   }
 }
