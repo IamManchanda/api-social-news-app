@@ -14,6 +14,7 @@ import { PostOptions } from "../dto/post-options";
 import { MyContext } from "../types";
 import { isAuth } from "../middlewares/is-auth";
 import { getConnection } from "typeorm";
+import { PaginatedPostsResponse } from "../lib/paginated-posts-response";
 
 @Resolver(Post)
 export class PostResolver {
@@ -27,23 +28,30 @@ export class PostResolver {
     return `${textSnippet}${textLength > snippetLimit ? "..." : ""}`;
   }
 
-  @Query(() => [Post])
-  posts(
+  @Query(() => PaginatedPostsResponse)
+  async posts(
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
-  ): Promise<Post[]> {
+  ): Promise<PaginatedPostsResponse> {
     const realLimit = Math.min(50, limit);
+    const realLimitPlusOne = Math.min(50, limit) + 1;
+
     const qb = getConnection()
       .getRepository(Post)
       .createQueryBuilder("p")
       .orderBy('"createdAt"', "DESC")
-      .take(realLimit);
+      .take(realLimitPlusOne);
     if (cursor) {
       qb.where('"createdAt" < :cursor', {
         cursor: new Date(parseInt(cursor)),
       });
     }
-    return qb.getMany();
+
+    const posts = await qb.getMany();
+    return {
+      posts: posts.slice(0, realLimit),
+      hasMore: posts.length === realLimitPlusOne,
+    };
   }
 
   @Query(() => Post, { nullable: true })
