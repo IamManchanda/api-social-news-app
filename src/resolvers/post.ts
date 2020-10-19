@@ -15,7 +15,6 @@ import { MyContext } from "../types";
 import { isAuth } from "../middlewares/is-auth";
 import { getConnection } from "typeorm";
 import { PaginatedPostsResponse } from "../lib/paginated-posts-response";
-import { Upvote } from "../entities/upvote";
 
 @Resolver(Post)
 export class PostResolver {
