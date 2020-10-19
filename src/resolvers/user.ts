@@ -1,5 +1,13 @@
 import { MyContext } from "src/types";
-import { Query, Mutation, Resolver, Arg, Ctx } from "type-graphql";
+import {
+  Query,
+  Mutation,
+  Resolver,
+  Arg,
+  Ctx,
+  FieldResolver,
+  Root,
+} from "type-graphql";
 import { User } from "../entities/user";
 import argon2 from "argon2";
 import { COOKIE_NAME, FORGOT_PASSWORD_PREFIX } from "../constants";
@@ -11,8 +19,16 @@ import { sendEmail } from "../utils/send-email";
 import { v4 as uuidv4 } from "uuid";
 import { getConnection } from "typeorm";
 
-@Resolver()
+@Resolver(User)
 export class UserResolver {
+  @FieldResolver(() => String)
+  email(@Root() user: User, @Ctx() { req }: MyContext) {
+    // This Field Resolver has been added for Security Reasons
+    // to not let current logged in user (or logged out user)
+    // see other user's email
+    return req.session.userId === user.id ? user.email : "";
+  }
+
   @Query(() => User, { nullable: true })
   me(@Ctx() { req }: MyContext): Promise<User | undefined> | null {
     if (!req.session.userId) return null;
