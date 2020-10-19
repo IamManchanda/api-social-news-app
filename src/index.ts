@@ -17,7 +17,7 @@ import path from "path";
 
 const main = async () => {
   /* Database Server Connection with ORM */
-  const conn = await createConnection({
+  /* const conn =  */ await createConnection({
     type: "postgres",
     database: "db-social-news-app",
     username: process.env.DATABASE_USERNAME || "postgres",
@@ -27,9 +27,10 @@ const main = async () => {
     migrations: [path.join(__dirname, "./migrations/*")],
     entities: [Post, User],
   });
-  await conn.runMigrations();
 
+  // await conn.runMigrations();
   // await Post.delete({});
+  // await User.delete({});
 
   /* API & Caching Server */
   const app = express();
