@@ -15,6 +15,7 @@ import { MyContext } from "../types";
 import { isAuth } from "../middlewares/is-auth";
 import { getConnection } from "typeorm";
 import { PaginatedPostsResponse } from "../lib/paginated-posts-response";
+import { Upvote } from "../entities/upvote";
 
 @Resolver(Post)
 export class PostResolver {
@@ -114,18 +115,49 @@ export class PostResolver {
     const isUpvote = value !== -1;
     const realValue = isUpvote ? 1 : -1;
     const { userId } = req.session;
-    await getConnection().query(`
-      START TRANSACTION;
+    const upvote = await Upvote.findOne({ where: { postId, userId } });
 
-      INSERT INTO upvote ("userId", "postId", value)
-      VALUES (${userId},${postId},${value});
-      
-      UPDATE post
-      SET points = points + ${realValue}
-      WHERE id = ${postId};
-      
-      COMMIT;
-    `);
+    if (upvote && upvote.value !== realValue) {
+      await getConnection().transaction(async (tm) => {
+        await tm.query(
+          `
+          UPDATE upvote
+          SET value = $1
+          WHERE "postId" = $2 AND "userId" = $3;
+        `,
+          [realValue, postId, userId],
+        );
+
+        await tm.query(
+          `
+          UPDATE post
+          SET points = points + $1
+          WHERE id = $2;
+        `,
+          [2 * realValue, postId],
+        );
+      });
+    } else if (!upvote) {
+      await getConnection().transaction(async (tm) => {
+        await tm.query(
+          `
+          INSERT INTO upvote ("userId", "postId", value)
+          VALUES ($1, $2, $3);
+        `,
+          [userId, postId, realValue],
+        );
+
+        await tm.query(
+          `
+          UPDATE post
+          SET points = points + $1
+          WHERE id = $2;
+        `,
+          [realValue, postId],
+        );
+      });
+    }
+
     return true;
   }
 }
