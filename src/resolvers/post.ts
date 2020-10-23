@@ -35,16 +35,30 @@ export class PostResolver {
     return userLoader.load(post.creatorId);
   }
 
+  @FieldResolver(() => Int, { nullable: true })
+  async voteStatus(
+    @Root() post: Post,
+    @Ctx() { req, upvoteLoader }: MyContext,
+  ) {
+    if (!req.session.userId) {
+      return null;
+    }
+    const upvote = await upvoteLoader.load({
+      postId: post.id,
+      userId: req.session.userId,
+    });
+    return upvote ? upvote.value : null;
+  }
+
   @Query(() => PaginatedPostsResponse)
   async posts(
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
-    @Ctx() { req }: MyContext,
   ): Promise<PaginatedPostsResponse> {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = Math.min(50, limit) + 1;
 
-    const replacements: any[] = [realLimitPlusOne, req.session.userId];
+    const replacements: any[] = [realLimitPlusOne];
 
     if (cursor) {
       replacements.push(new Date(parseInt(cursor)));
@@ -52,15 +66,8 @@ export class PostResolver {
 
     const posts = await getConnection().query(
       `
-      SELECT 
-        p.*,
-        ${
-          req.session.userId
-            ? '(SELECT value from upvote WHERE "userId" = $2 AND "postId" = p.id) "voteStatus"'
-            : '$2 as "voteStatus"'
-        }
-      FROM post p
-      ${cursor ? `WHERE p."createdAt" < $3` : ""}
+      SELECT p.* FROM post p
+      ${cursor ? `WHERE p."createdAt" < $2` : ""}
       ORDER BY p."createdAt" DESC
       LIMIT $1
     `,

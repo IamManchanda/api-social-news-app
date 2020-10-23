@@ -16,6 +16,7 @@ import { User } from "./entities/user";
 import path from "path";
 import { Upvote } from "./entities/upvote";
 import { createUserLoader } from "./utils/create-user-loader";
+import { createUpvoteLoader } from "./utils/create-upvote-loader";
 
 const main = async () => {
   /* Database Server Connection with ORM */
@@ -74,6 +75,7 @@ const main = async () => {
       res,
       redis,
       userLoader: createUserLoader(),
+      upvoteLoader: createUpvoteLoader(),
     }),
   });
   server.applyMiddleware({ app, path: "/", cors: false });
