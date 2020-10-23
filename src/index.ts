@@ -15,6 +15,7 @@ import { Post } from "./entities/post";
 import { User } from "./entities/user";
 import path from "path";
 import { Upvote } from "./entities/upvote";
+import { createUserLoader } from "./utils/create-user-loader";
 
 const main = async () => {
   /* Database Server Connection with ORM */
@@ -68,7 +69,12 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }) => ({ req, res, redis }),
+    context: ({ req, res }) => ({
+      req,
+      res,
+      redis,
+      userLoader: createUserLoader(),
+    }),
   });
   server.applyMiddleware({ app, path: "/", cors: false });
   app.listen(port, () => {
