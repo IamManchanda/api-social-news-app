@@ -16,17 +16,23 @@ import { isAuth } from "../middlewares/is-auth";
 import { getConnection } from "typeorm";
 import { PaginatedPostsResponse } from "../lib/paginated-posts-response";
 import { Upvote } from "../entities/upvote";
+import { User } from "../entities/user";
 
 @Resolver(Post)
 export class PostResolver {
   @FieldResolver(() => String)
   textSnippet(
     @Arg("snippetLimit", () => Int) snippetLimit: number,
-    @Root() root: Post,
+    @Root() post: Post,
   ) {
-    const textLength = root.text.length;
-    let textSnippet = root.text.slice(0, snippetLimit);
+    const textLength = post.text.length;
+    let textSnippet = post.text.slice(0, snippetLimit);
     return `${textSnippet}${textLength > snippetLimit ? "..." : ""}`;
+  }
+
+  @FieldResolver(() => User)
+  creator(@Root() post: Post) {
+    return User.findOne(post.creatorId);
   }
 
   @Query(() => PaginatedPostsResponse)
@@ -48,20 +54,12 @@ export class PostResolver {
       `
       SELECT 
         p.*,
-        JSON_BUILD_OBJECT(
-          'id', u.id,
-          'email', u.email,
-          'username', u.username,
-          'createdAt', u."createdAt",
-          'updatedAt', u."updatedAt"
-        ) creator,
         ${
           req.session.userId
             ? '(SELECT value from upvote WHERE "userId" = $2 AND "postId" = p.id) "voteStatus"'
             : '$2 as "voteStatus"'
         }
       FROM post p
-      INNER JOIN public.user u ON u.id = p."creatorId"
       ${cursor ? `WHERE p."createdAt" < $3` : ""}
       ORDER BY p."createdAt" DESC
       LIMIT $1
@@ -77,7 +75,7 @@ export class PostResolver {
 
   @Query(() => Post, { nullable: true })
   post(@Arg("id", () => Int) id: number): Promise<Post | undefined> {
-    return Post.findOne(id, { relations: ["creator"] });
+    return Post.findOne(id);
   }
 
   @Mutation(() => Post)
