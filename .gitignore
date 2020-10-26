@@ -106,3 +106,6 @@ dist
 
 # ORM Config
 ormconfig.json
+
+# Deployment Script
+deploy.sh
