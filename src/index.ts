@@ -63,7 +63,7 @@ const main = async () => {
         httpOnly: true,
         sameSite: "lax",
         secure: __prod__,
-        domain: __prod__ ? ".harrymanchanda.in" : undefined,
+        domain: __prod__ ? ".web-social-news-app.vercel.app" : undefined,
       },
       saveUninitialized: false,
       secret: SESSION_SECRET as string | string[],
