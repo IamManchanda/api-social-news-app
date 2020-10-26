@@ -1,6 +1,6 @@
 {
   "name": "api-social-news-app",
-  "version": "1.0.0",
+  "version": "1.0.12",
   "description": "API: Social News App",
   "scripts": {
     "generate:env": "gen-env-types .env -o src/env.d.ts -e .",
