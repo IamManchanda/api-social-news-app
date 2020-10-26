@@ -66,7 +66,7 @@ const main = async () => {
         domain: __prod__ ? ".web-social-news-app.vercel.app" : undefined,
       },
       saveUninitialized: false,
-      secret: SESSION_SECRET as string | string[],
+      secret: SESSION_SECRET as string,
       resave: false,
     }),
   );
