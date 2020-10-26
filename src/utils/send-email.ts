@@ -12,8 +12,8 @@ export const sendEmail = async ({ to, subject, html }: EmailOptions) => {
     port: 587,
     secure: false,
     auth: {
-      user: process.env.NODEMAILER_USERNAME,
-      pass: process.env.NODEMAILER_PASSWORD,
+      user: "alittyivlkqrkgz5@ethereal.email",
+      pass: "3XHaYDqeVhwkbWZ2Q8",
     },
   });
   const info = await transporter.sendMail({

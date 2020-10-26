@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import "dotenv-safe/config";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
@@ -19,31 +20,34 @@ import { createUserLoader } from "./utils/create-user-loader";
 import { createUpvoteLoader } from "./utils/create-upvote-loader";
 
 const main = async () => {
+  /* Environment Variables */
+  const {
+    DATABASE_URL,
+    REDIS_URL,
+    PORT,
+    SESSION_SECRET,
+    CORS_ORIGIN,
+  } = process.env;
+
   /* Database Server Connection with ORM */
-  /* const conn =  */ await createConnection({
+  const conn = await createConnection({
     type: "postgres",
-    database: "db-social-news-app",
-    username: process.env.DATABASE_USERNAME || "postgres",
-    password: process.env.DATABASE_PASSWORD || "postgres",
+    url: DATABASE_URL,
     logging: true,
-    synchronize: true,
+    // synchronize: true,
     migrations: [path.join(__dirname, "./migrations/*")],
     entities: [Post, User, Upvote],
   });
-
-  // await conn.runMigrations();
-  // await Post.delete({});
-  // await User.delete({});
+  await conn.runMigrations();
 
   /* API & Caching Server */
   const app = express();
-  const host = "http://localhost";
-  const port = 4000;
   const RedisStore = connectRedis(session);
-  const redis = new Redis();
+  const redis = new Redis(REDIS_URL);
+  app.set("proxy", 1);
   app.use(
     cors({
-      origin: "http://localhost:3000",
+      origin: CORS_ORIGIN,
       credentials: true,
     }),
   );
@@ -59,9 +63,10 @@ const main = async () => {
         httpOnly: true,
         sameSite: "lax",
         secure: __prod__,
+        domain: __prod__ ? ".harrymanchanda.in" : undefined,
       },
       saveUninitialized: false,
-      secret: process.env.REDIS_SECRET as string | string[],
+      secret: SESSION_SECRET as string | string[],
       resave: false,
     }),
   );
@@ -79,8 +84,10 @@ const main = async () => {
     }),
   });
   server.applyMiddleware({ app, path: "/", cors: false });
+
+  const port = parseInt(PORT);
   app.listen(port, () => {
-    console.log(`Server started on port ${host}:${port}${server.graphqlPath}`);
+    console.log(`Server started on port: ${port}`);
   });
 };
 

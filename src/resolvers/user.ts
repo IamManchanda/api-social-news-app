@@ -156,7 +156,7 @@ export class UserResolver {
       subject: "Reset Password!",
       html: `
           <p>
-            Please visit this link to <a href="${process.env.RESET_PASSWORD_LINK}/${token}">Reset Password</a>
+            Please visit this link to <a href="${process.env.RESET_PASSWORD_DIRECTORY}/${token}">Reset Password</a>
           </p>
         `,
     });
